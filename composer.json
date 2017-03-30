@@ -2,7 +2,7 @@
     "name": "pragma-framework/docs",
     "description": "The Pragma Module for handling documents in Pragma Framework",
     "license": "MIT",
-    "keywords": ["pragma", "framework", "documents", "csrf"],
+    "keywords": ["pragma", "framework", "documents"],
     "authors": [
         {"name": "Thomas Metois"},
         {"name": "Cyril Rouyer"}
