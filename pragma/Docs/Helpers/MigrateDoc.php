@@ -1,10 +1,10 @@
 <?php
-namespace Pragma\Helpers;
+namespace Pragma\Docs\Helpers;
 
 use Composer\Script\Event;
 use Composer\Installer\PackageEvent;
 
-class MigrateDoc{
+class Migrate{
 	public static function preUpdate(Event $event) {
 		if (!self::checkConfig($event)) {
 			die();
@@ -47,7 +47,7 @@ class MigrateDoc{
 		$phinxApp = require 'vendor/robmorgan/phinx/app/phinx.php';
 		$phinxTextWrapper = new \Phinx\Wrapper\TextWrapper($phinxApp);
 
-		$phinxTextWrapper->setOption('configuration', __DIR__.'/../../phinx.php');
+		$phinxTextWrapper->setOption('configuration', __DIR__.'/../../../phinx.php');
 		$phinxTextWrapper->setOption('parser', 'PHP');
 		$phinxTextWrapper->setOption('environment', 'default');
 

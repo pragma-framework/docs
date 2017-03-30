@@ -1,5 +1,5 @@
 <?php
-namespace Pragma\Models;
+namespace Pragma\Docs\Models;
 
 use Pragma\ORM\Model;
 
@@ -9,8 +9,8 @@ class Document extends Model{
 	protected $upload_path = 'uploads';
 
 	public function __construct(){
-		// base on ./vendor/pragma-framework/docs/Pragma/Models/ path
-		defined('DOC_STORE') OR define('DOC_STORE',realpath(__DIR__.'/../../../../').'/data/');
+		// base on ./vendor/pragma-framework/docs/Pragma/Docs/Models/ path
+		defined('DOC_STORE') OR define('DOC_STORE',realpath(__DIR__.'/../../../../../').'/data/');
         return parent::__construct(self::getTableName());
     }
 

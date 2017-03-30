@@ -2,7 +2,7 @@
 
 use Phinx\Migration\AbstractMigration;
 
-use Pragma\Models\Document;
+use Pragma\Docs\Models\Document;
 
 class CreateDocumentTable extends AbstractMigration
 {
