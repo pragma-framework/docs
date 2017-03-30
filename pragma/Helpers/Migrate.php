@@ -14,7 +14,7 @@ class Migrate{
 	public static function postUpdate(Event $event){
 		if (self::checkConfig($event)) {
 			// Run phinx migrate
-			self::phinxMigrate();
+			self::phinxMigrate($event);
 		} else {
 			die();
 		}
@@ -23,7 +23,7 @@ class Migrate{
 	public static function postInstall(Event $event){
 		if (self::checkConfig($event)) {
 			// Run phinx migrate
-			self::phinxMigrate(true);
+			self::phinxMigrate($event,true);
 		} else {
 			die();
 		}
@@ -43,7 +43,7 @@ class Migrate{
 		}
 	}
 
-	protected static function phinxMigrate($install = false){
+	protected static function phinxMigrate(Event &$event,$install = false){
 		$phinxApp = require 'vendor/robmorgan/phinx/app/phinx.php';
 		$phinxTextWrapper = new \Phinx\Wrapper\TextWrapper($phinxApp);
 
@@ -52,8 +52,10 @@ class Migrate{
 		$phinxTextWrapper->setOption('environment', 'default');
 
 		$log = $phinxTextWrapper->getMigrate();
+		$event->getIO()->write($log);
 		if ($install) {
 			$log = $phinxTextWrapper->getSeed();
+			$event->getIO()->write($log);
 		}
 	}
 }
