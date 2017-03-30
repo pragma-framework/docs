@@ -38,7 +38,23 @@ class Document extends Model{
 		 }
 	}
 
-	// TODO: include clone fct
+	public function clone(){
+		$filepath = $this->get_full_path();
+		$path = "";
+		if (file_exists($filepath) && !empty($this->path)) {
+			$context = date('Y/m');
+			$finalfilename = uniqid() . '.' . $this->extension;
+			$path = $context . '/' . $finalfilename;
+			$realpath = $this->build_path($context).'/'.$finalfilename;
+			copy($filepath, $realpath);
+		}
+		return self::build(array(
+			'name' => $this->name,
+			'size' => $this->size,
+			'extension' => $this->extension,
+			'path' => $path,
+		))->save();
+	}
 
 	protected static function buildUserLabel(){
 		if(isset($_SESSION['user']['fullname'])){
@@ -104,7 +120,7 @@ class Document extends Model{
 
 		$filepath = $this->get_full_path();
 
-		if (file_exists($filepath)) {
+		if (file_exists($filepath) && !empty($this->path)) {
 			$UserBrowser = '';
 			if (!empty($_SERVER['HTTP_USER_AGENT'])) {
 				if (preg_match('Opera(/| )([0-9].[0-9]{1,2})', $_SERVER['HTTP_USER_AGENT']) !== false) {
