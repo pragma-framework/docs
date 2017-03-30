@@ -9,7 +9,7 @@ In composer.json add:
 And in scripts blocks:
 
 	"scripts": {
-		"post-package-update": [
+	    "post-package-update": [
             "Pragma\\Docs\\Helpers\\Migrate::postUpdate"
         ],
         "post-package-install": [
