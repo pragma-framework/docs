@@ -30,7 +30,8 @@ class Migrate{
 	}
 
 	protected static function checkConfig(Event &$event) {
-		if(!file_exists('config/config.php')){
+		// base on ./vendor/pragma-framework/docs/Pragma/Docs/Helpers/ path
+		if(!file_exists(realpath(__DIR__.'/../../../../../../').'/config/config.php')){
 			$event->getIO()->writeError(array(
 				"You need to configure your app.",
 				"Create config/config.php and define database informations connection.",
@@ -44,7 +45,8 @@ class Migrate{
 	}
 
 	protected static function phinxMigrate(Event &$event,$install = false){
-		$phinxApp = require 'vendor/robmorgan/phinx/app/phinx.php';
+		// base on ./vendor/pragma-framework/docs/Pragma/Docs/Helpers/ path
+		$phinxApp = require realpath(__DIR__.'/../../../../../').'/robmorgan/phinx/app/phinx.php';
 		$phinxTextWrapper = new \Phinx\Wrapper\TextWrapper($phinxApp);
 
 		$phinxTextWrapper->setOption('configuration', __DIR__.'/../../../phinx.php');
@@ -55,6 +57,22 @@ class Migrate{
 		$event->getIO()->write($log);
 		if ($install) {
 			$log = $phinxTextWrapper->getSeed();
+			$event->getIO()->write($log);
+		}
+	}
+
+	protected static function preUninstall(PackageEvent $event) {
+		// base on ./vendor/pragma-framework/docs/Pragma/Docs/Helpers/ path
+		if(!file_exists(realpath(__DIR__.'/../../../../../../').'/config/config.php')){
+			// base on ./vendor/pragma-framework/docs/Pragma/Docs/Helpers/ path
+			$phinxApp = require realpath(__DIR__.'/../../../../../').'/robmorgan/phinx/app/phinx.php';
+			$phinxTextWrapper = new \Phinx\Wrapper\TextWrapper($phinxApp);
+
+			$phinxTextWrapper->setOption('configuration', __DIR__.'/../../../phinx.php');
+			$phinxTextWrapper->setOption('parser', 'PHP');
+			$phinxTextWrapper->setOption('environment', 'default');
+
+			$log = $phinxTextWrapper->getRollback(null,0);
 			$event->getIO()->write($log);
 		}
 	}

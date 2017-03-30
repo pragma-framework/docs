@@ -10,7 +10,7 @@ class Document extends Model{
 
 	public function __construct(){
 		// base on ./vendor/pragma-framework/docs/Pragma/Docs/Models/ path
-		defined('DOC_STORE') OR define('DOC_STORE',realpath(__DIR__.'/../../../../../').'/data/');
+		defined('DOC_STORE') OR define('DOC_STORE',realpath(__DIR__.'/../../../../../../').'/data/');
         return parent::__construct(self::getTableName());
     }
 

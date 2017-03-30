@@ -24,6 +24,9 @@
         ],
         "post-update-cmd": [
             "Pragma\\Docs\\Helpers\\Migrate::postUpdate"
+        ],
+        "pre-package-uninstall": [
+            "Pragma\\Docs\\Helpers\\Migrate::preUninstall"
         ]
     }
 }
