@@ -31,6 +31,15 @@ class Document extends Model{
 		return parent::save();
 	}
 
+	public function delete(){
+		if( ! $this->new && ! is_null($this->id) && $this->id > 0){
+			$this->delete_physical_file();
+			parent::delete();
+		 }
+	}
+
+	// TODO: include clone fct
+
 	protected static function buildUserLabel(){
 		if(isset($_SESSION['user']['fullname'])){
 			return $_SESSION['user']['fullname'];
@@ -84,7 +93,7 @@ class Document extends Model{
 	}
 
 	protected function delete_physical_file(){
-		if(file_exists($this->get_full_path())){
+		if(file_exists($this->get_full_path()) && !empty($this->path)){
 			unlink($this->get_full_path());
 		}
 	}
@@ -93,9 +102,9 @@ class Document extends Model{
 		ob_clean();
 		error_reporting(0);
 
-		$filepath = $this->path;
+		$filepath = $this->get_full_path();
 
-		if (file_exists($this->path)) {
+		if (file_exists($filepath)) {
 			$UserBrowser = '';
 			if (!empty($_SERVER['HTTP_USER_AGENT'])) {
 				if (preg_match('Opera(/| )([0-9].[0-9]{1,2})', $_SERVER['HTTP_USER_AGENT']) !== false) {
@@ -106,10 +115,10 @@ class Document extends Model{
 			}
 
 			if(function_exists('mime_content_type')){
-				$mime_type = mime_content_type($this->path);
+				$mime_type = mime_content_type($filepath);
 			}elseif(function_exists('finfo_open')){
 				$finfo = finfo_open(FILEINFO_MIME);
-				$mime_type = finfo_file($finfo, $this->path);
+				$mime_type = finfo_file($finfo, $filepath);
 				finfo_close($finfo);
 			}else{
 				/// important for download im most browser
@@ -142,7 +151,7 @@ class Document extends Model{
 				@ini_set('zlib.output_compression', 'Off');
 
 				// new download function works with IE6+SSL(http://fr.php.net/manual/fr/function.header.php#65404)
-				$filepath = rawurldecode($this->path);
+				$filepath = rawurldecode($filepath);
 				$size = filesize($filepath);
 
 				header('Content-Type: ' . $mime_type);
