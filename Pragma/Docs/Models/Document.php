@@ -35,7 +35,7 @@ class Document extends Model{
 		if( ! $this->new && ! is_null($this->id) && $this->id > 0){
 			$this->delete_physical_file();
 			parent::delete();
-		 }
+		}
 	}
 
 	public function clone(){
