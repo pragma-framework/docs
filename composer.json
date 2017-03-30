@@ -4,7 +4,7 @@
     "license": "MIT",
     "keywords": ["pragma", "framework", "documents", "csrf"],
     "authors": [
-        {"name": "Thomas Metois"}
+        {"name": "Thomas Metois"},
         {"name": "Cyril Rouyer"}
     ],
     "require": {
