@@ -1,5 +1,5 @@
 <?php
-namespace Pragma\Doc;
+namespace Pragma\Docs;
 
 use Pragma\ORM\Model;
 

@@ -1,5 +1,5 @@
 <?php
-namespace Pragma\Doc\Helpers;
+namespace Pragma\Docs\Helpers;
 
 use Composer\Script\Event;
 use Composer\Installer\PackageEvent;
