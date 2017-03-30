@@ -1,5 +1,28 @@
 # Pragma Docs
 
+## Installation
+
+In composer.json add:
+
+	require {"pragma-framework/docs": "dev-master"}
+
+And in scripts blocks:
+
+	"scripts": {
+		"post-package-update": [
+            "Pragma\\Docs\\Helpers\\Migrate::postUpdate"
+        ],
+        "post-package-install": [
+            "Pragma\\Docs\\Helpers\\Migrate::postInstall"
+        ],
+        "pre-package-install": [
+            "Pragma\\Docs\\Helpers\\Migrate::preUpdate"
+        ],
+        "pre-package-uninstall": [
+            "Pragma\\Docs\\Helpers\\Migrate::preUninstall"
+        ]
+	}
+
 ## Configuration
 
 ### Config.php

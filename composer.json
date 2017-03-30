@@ -16,14 +16,14 @@
         "psr-0" : { "Pragma\\Docs" : "." }
     },
     "scripts": {
-        "pre-update-cmd": [
-            "Pragma\\Docs\\Helpers\\Migrate::preUpdate"
+        "post-package-update": [
+            "Pragma\\Docs\\Helpers\\Migrate::postUpdate"
         ],
-        "post-install-cmd": [
+        "post-package-install": [
             "Pragma\\Docs\\Helpers\\Migrate::postInstall"
         ],
-        "post-update-cmd": [
-            "Pragma\\Docs\\Helpers\\Migrate::postUpdate"
+        "pre-package-install": [
+            "Pragma\\Docs\\Helpers\\Migrate::preUpdate"
         ],
         "pre-package-uninstall": [
             "Pragma\\Docs\\Helpers\\Migrate::preUninstall"
