@@ -1,0 +1,29 @@
+{
+    "name": "pragma-framework/docs",
+    "description": "The Pragma Module for handling documents in Pragma Framework",
+    "license": "MIT",
+    "keywords": ["pragma", "framework", "documents", "csrf"],
+    "authors": [
+        {"name": "Thomas Metois"}
+        {"name": "Cyril Rouyer"}
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "pragma-framework/core": "dev-master",
+        "robmorgan/phinx": ">=0.7.0",
+    },
+     "autoload": {
+        "psr-0" : { "Pragma\\Docs" : "." }
+    },
+    "scripts": {
+        "pre-update-cmd": [
+            "Pragma\\Docs\\Helpers\\Migrate::preUpdate"
+        ],
+        "post-install-cmd": [
+            "Pragma\\Docs\\Helpers\\Migrate::postInstall"
+        ],
+        "post-update-cmd": [
+            "Pragma\\Docs\\Helpers\\Migrate::postUpdate"
+        ]
+    }
+}
