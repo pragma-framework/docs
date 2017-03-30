@@ -1,5 +1,5 @@
 <?php
-namespace Pragma\Docs;
+namespace Pragma\Models;
 
 use Pragma\ORM\Model;
 
@@ -64,7 +64,7 @@ class Document extends Model{
 			$this->extension = $extension;
 			return true;
 		}
-		catch(Exception $e){
+		catch(\Exception $e){
 			return false;
 		}
 	}

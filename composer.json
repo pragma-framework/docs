@@ -17,13 +17,13 @@
     },
     "scripts": {
         "pre-update-cmd": [
-            "Pragma\\Docs\\Helpers\\Migrate::preUpdate"
+            "Pragma\\Helpers\\MigrateDoc::preUpdate"
         ],
         "post-install-cmd": [
-            "Pragma\\Docs\\Helpers\\Migrate::postInstall"
+            "Pragma\\Helpers\\MigrateDoc::postInstall"
         ],
         "post-update-cmd": [
-            "Pragma\\Docs\\Helpers\\Migrate::postUpdate"
+            "Pragma\\Helpers\\MigrateDoc::postUpdate"
         ]
     }
 }

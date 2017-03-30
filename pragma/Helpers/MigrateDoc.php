@@ -1,10 +1,10 @@
 <?php
-namespace Pragma\Docs\Helpers;
+namespace Pragma\Helpers;
 
 use Composer\Script\Event;
 use Composer\Installer\PackageEvent;
 
-class Migrate{
+class MigrateDoc{
 	public static function preUpdate(Event $event) {
 		if (!self::checkConfig($event)) {
 			die();
