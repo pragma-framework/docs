@@ -38,7 +38,7 @@ class Document extends Model{
 		}
 	}
 
-	public function clone(){
+	public function cloneDoc(){
 		$filepath = $this->get_full_path();
 		$path = "";
 		if (file_exists($filepath) && !empty($this->path)) {
@@ -201,7 +201,7 @@ class Document extends Model{
 				@readfile($filepath);
 				@ob_flush();
 				@flush();
-				
+
 				if (isset($new_length)) {
 					$size = $new_length;
 				}
