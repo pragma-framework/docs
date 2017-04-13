@@ -5,6 +5,24 @@ use Composer\Script\Event;
 use Composer\Installer\PackageEvent;
 
 class Migrate{
+	public static function postInstallCmd(Event $event) {
+		if (self::checkConfig($event)) {
+			// Run phinx migrate
+			self::phinxMigrate($event,true);
+		} else {
+			die();
+		}
+	}
+	public static function postUpdateCmd(Event $event) {
+		if (self::checkConfig($event)) {
+			// Run phinx migrate
+			self::phinxMigrate($event);
+		} else {
+			die();
+		}
+	}
+
+	// Don't use it
 	public static function preUpdate(PackageEvent $event) {
 		if($event->getOperation()->getPackage()->getName() == "pragma-framework/docs"){
 			if (!self::checkConfig($event)) {
@@ -13,6 +31,7 @@ class Migrate{
 		}
 	}
 
+	// Don't use it
 	public static function postUpdate(PackageEvent $event){
 		if($event->getOperation()->getTargetPackage()->getName() == "pragma-framework/docs"){
 			if (self::checkConfig($event)) {
@@ -24,6 +43,7 @@ class Migrate{
 		}
 	}
 
+	// Don't use it
 	public static function postInstall(PackageEvent $event){
 		if($event->getOperation()->getPackage()->getName() == "pragma-framework/docs"){
 			if (self::checkConfig($event)) {
@@ -35,7 +55,7 @@ class Migrate{
 		}
 	}
 
-	protected static function checkConfig(PackageEvent &$event) {
+	protected static function checkConfig(&$event) {
 		// base on ./vendor/pragma-framework/docs/Pragma/Docs/Helpers/ path
 		if(!file_exists(realpath(__DIR__.'/../../../../../../').'/config/config.php')){
 			$event->getIO()->writeError(array(
@@ -50,7 +70,7 @@ class Migrate{
 		}
 	}
 
-	protected static function phinxMigrate(PackageEvent &$event,$install = false){
+	protected static function phinxMigrate(&$event,$install = false){
 		// base on ./vendor/pragma-framework/docs/Pragma/Docs/Helpers/ path
 		$phinxApp = require realpath(__DIR__.'/../../../../../').'/robmorgan/phinx/app/phinx.php';
 		$phinxTextWrapper = new \Phinx\Wrapper\TextWrapper($phinxApp);

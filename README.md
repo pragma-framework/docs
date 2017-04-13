@@ -9,18 +9,12 @@ In composer.json add:
 And in scripts blocks:
 
 	"scripts": {
-	    "post-package-update": [
-            "Pragma\\Docs\\Helpers\\Migrate::postUpdate"
-        ],
-        "post-package-install": [
-            "Pragma\\Docs\\Helpers\\Migrate::postInstall"
-        ],
-        "pre-package-install": [
-            "Pragma\\Docs\\Helpers\\Migrate::preUpdate"
-        ],
-        "pre-package-uninstall": [
-            "Pragma\\Docs\\Helpers\\Migrate::preUninstall"
-        ]
+		"post-install-cmd": [
+			"Pragma\\Docs\\Helpers\\Migrate::postInstallCmd"
+		],
+		"post-update-cmd": [
+			"Pragma\\Docs\\Helpers\\Migrate::postUpdateCmd"
+		]
 	}
 
 ## Configuration
