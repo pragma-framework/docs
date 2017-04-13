@@ -14,7 +14,7 @@ class Migrate{
 	}
 
 	public static function postUpdate(PackageEvent $event){
-		if($event->getOperation()->getPackage()->getName() == "pragma-framework/docs"){
+		if($event->getOperation()->getTargetPackage()->getName() == "pragma-framework/docs"){
 			if (self::checkConfig($event)) {
 				// Run phinx migrate
 				self::phinxMigrate($event);
