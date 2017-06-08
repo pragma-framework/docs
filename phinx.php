@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__.'/../../../config/config.php';
-require_once __DIR__.'/../../../config/default.php';
+if(file_exists(__DIR__.'/../../../config/default.php')){
+    require_once __DIR__.'/../../../config/default.php';
+}
 return array(
     'paths' => array(
         'migrations' => '%%PHINX_CONFIG_DIR%%/db/migrations',
