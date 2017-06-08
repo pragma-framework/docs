@@ -8,7 +8,22 @@ class CreateDocumentTable extends AbstractMigration
 {
     public function change()
     {
-        $table = $this->table(Document::getTableName());
+        if(defined('ORM_ID_AS_UID') && ORM_ID_AS_UID){
+          $strategy = defined('ORM_UID_STRATEGY') && ORM_UID_STRATEGY == 'mysql' ? 'mysql' : 'php';
+          $table = $this->table(Document::getTableName(), ['id' => false, 'primary_key' => 'id']);
+          switch($strategy){
+            case 'mysql':
+              $table->addColumn('id', 'char', ['limit' => 36]);
+              break;
+            default:
+            case 'php':
+              $table->addColumn('id', 'char', ['limit' => 23]);
+              break;
+          }
+        }
+        else{
+          $table = $this->table(Document::getTableName());
+        }
         $table->addColumn("name", "string")
               ->addColumn("path", "string")
               ->addColumn("size", "decimal")
