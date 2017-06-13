@@ -14,16 +14,5 @@
     },
      "autoload": {
         "psr-0" : { "Pragma\\Docs" : "." }
-    },
-    "scripts": {
-        "post-install-cmd": [
-            "Pragma\\Docs\\Helpers\\Migrate::postInstallCmd"
-        ],
-        "post-update-cmd": [
-            "Pragma\\Docs\\Helpers\\Migrate::postUpdateCmd"
-        ],
-        "pre-package-uninstall": [
-            "Pragma\\Docs\\Helpers\\Migrate::preUninstall"
-        ]
     }
 }
