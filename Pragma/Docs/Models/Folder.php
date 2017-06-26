@@ -28,26 +28,10 @@ class Folder extends Model{
     public function save(){
         if($this->is_new()){
             $this->created_at = date('Y-m-d H:i:s');
-            $this->created_by = self::buildUserLabel();
         }else{
             $this->updated_at = date('Y-m-d H:i:s');
-            $this->updated_by = self::buildUserLabel();
         }
         return parent::save();
-    }
-
-    protected static function buildUserLabel(){
-        if(isset($_SESSION['user']['fullname'])){
-            return $_SESSION['user']['fullname'];
-        }elseif(isset($_SESSION['user']['firstname']) && isset($_SESSION['user']['lastname'])){
-            return $_SESSION['user']['firstname']." ".$_SESSION['user']['lastname'];
-        }elseif(isset($_SESSION['user']['email'])){
-            return $_SESSION['user']['email'];
-        }elseif(isset($_SESSION['user']['login'])){
-            return $_SESSION['user']['login'];
-        }else{
-            return "";
-        }
     }
 
     public function getChildren(){
