@@ -8,7 +8,6 @@ use Pragma\Docs\Exceptions\FolderException;
 class Folder extends Model{
     CONST TABLENAME = 'folders';
 
-    private $oldFields = array();
     protected $children = array();
     protected $childrenInitialized = false;
 
@@ -73,8 +72,11 @@ class Folder extends Model{
         }
     }
 
-    private function initOldFields(){
-        $this->oldFields = $this->fields;
+    protected function initOldFields($force = false){
+        if(! $this->initialized || $force){
+            $this->initial_values = $this->fields;
+            $this->initialized = true;
+        }
     }
 
     private function testFolderName(){
@@ -99,9 +101,9 @@ class Folder extends Model{
     }
 
     private function detectChangeFolder(){
-        if(!$this->is_new() && ! is_null($this->id) && !empty($this->id) && $this->oldFields['folder_id'] != $this->folder_id){
+        if(!$this->is_new() && ! is_null($this->id) && !empty($this->id) && $this->initial_values['folder_id'] != $this->folder_id){
             $newFold = $this->folder_id;
-            $this->folder_id = $this->oldFields['folder_id'];
+            $this->folder_id = $this->initial_values['folder_id'];
             $this->initChildren();
             $this->folder_id = $newFold;
 
