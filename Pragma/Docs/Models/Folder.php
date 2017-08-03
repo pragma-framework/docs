@@ -51,7 +51,7 @@ class Folder extends Model{
 
             $family = array();
             foreach($children as $c){
-                $family[$c->folder_id][] = $c;
+                $family[$c->parent_id][] = $c;
             }
             if( !empty($family)){
                 $temp = array();
@@ -72,14 +72,14 @@ class Folder extends Model{
         }
     }
 
-    protected function initOldFields($force = false){
+    public function initOldFields($force = false){
         if(! $this->initialized || $force){
             $this->initial_values = $this->fields;
             $this->initialized = true;
         }
     }
 
-    private function testFolderName(){
+    public function testFolderName(){
         // Empty name
         $this->name = trim($this->name);
         if(empty($this->name)){
@@ -88,7 +88,7 @@ class Folder extends Model{
 
         // Folder's name unicity
         $existing = self::forge()
-            ->where('folder_id', '=', $this->folder_id)
+            ->where('parent_id', '=', $this->parent_id)
             ->where('name', 'LIKE', $this->name);
          if(!$this->is_new() && ! is_null($this->id) && !empty($this->id)){
             $existing = $existing->where('id', '!=', $this->id);
@@ -100,15 +100,15 @@ class Folder extends Model{
         }
     }
 
-    private function detectChangeFolder(){
-        if(!$this->is_new() && ! is_null($this->id) && !empty($this->id) && $this->initial_values['folder_id'] != $this->folder_id){
-            $newFold = $this->folder_id;
-            $this->folder_id = $this->initial_values['folder_id'];
+    public function detectChangeFolder(){
+        if(!$this->is_new() && ! is_null($this->id) && !empty($this->id) && $this->initial_values['parent_id'] != $this->parent_id){
+            $newFold = $this->parent_id;
+            $this->parent_id = $this->initial_values['parent_id'];
             $this->initChildren();
-            $this->folder_id = $newFold;
+            $this->parent_id = $newFold;
 
-            if(!empty($this->folder_id)){
-                $father = self::find($this->folder_id);
+            if(!empty($this->parent_id)){
+                $father = self::find($this->parent_id);
                 $this->root_id = empty($father->root_id)? $father->id : $father->root_id;
             }else{
                 $desc = $this->describe();
@@ -129,7 +129,7 @@ class Folder extends Model{
         }
     }
 
-    private function deleteFolder(){
+    public function deleteFolder(){
         if( ! $this->new && ! is_null($this->id) && !empty($this->id)){
             // Delete documents
             $files = Document::forge()
