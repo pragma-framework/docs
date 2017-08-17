@@ -27,6 +27,9 @@ class Folder extends Model{
     public function save(){
         if($this->is_new()){
             $this->created_at = date('Y-m-d H:i:s');
+            if(!empty($this->parent_id)){
+                $this->updateRootId();
+            }
         }else{
             $this->updated_at = date('Y-m-d H:i:s');
         }
@@ -145,5 +148,17 @@ class Folder extends Model{
                 $c->delete();
             }
         }
+    }
+
+    protected function updateRootId(){
+        if( empty($this->parent_id) ){
+            return false;
+        }
+        $parent = static::find($this->parent_id);
+        if( empty($parent) ){
+            return false;
+        }
+
+        $this->root_id = empty($parent->root_id) ? $parent->id : $parent->root_id;
     }
 }
