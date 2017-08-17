@@ -144,8 +144,6 @@ class Folder extends Model{
             foreach($this->children as $c){
                 $c->delete();
             }
-
-            parent::delete();
         }
     }
 }
