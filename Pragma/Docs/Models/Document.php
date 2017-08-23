@@ -7,6 +7,7 @@ class Document extends Model{
     CONST TABLENAME = 'documents';
 
     protected $upload_path = 'uploads';
+    protected $has_physical_file_changed = false;
 
     public function __construct(){
         // base on ./vendor/pragma-framework/docs/Pragma/Docs/Models/ path
@@ -56,6 +57,7 @@ class Document extends Model{
 
     public function handle_file($file){
         try{
+            $this->has_physical_file_changed = true;
             if( ! $this->is_new() ){//on doit supprimer physiquement l'ancien fichier
                 $this->delete_physical_file();
             }
@@ -63,7 +65,8 @@ class Document extends Model{
             $tmp_name = $file["tmp_name"];
             $extension = strtolower(pathinfo($file['name'],PATHINFO_EXTENSION));
             $context = date('Y/m');
-            $finalfilename = uniqid() . '.' . $extension;
+            $this->uid = uniqid();
+            $finalfilename = $this->uid . '.' . $extension;
             $path = $context . '/' . $finalfilename;
             $realpath = $this->build_path($context).'/'.$finalfilename;
             move_uploaded_file($tmp_name, $realpath);
@@ -76,6 +79,10 @@ class Document extends Model{
         catch(\Exception $e){
             return false;
         }
+    }
+
+    public function has_physical_file_changed(){
+        return $this->has_physical_file_changed;
     }
 
     protected function build_path($context){
@@ -204,5 +211,29 @@ class Document extends Model{
         } else {
             return(false);
         }
+    }
+
+    /*
+    * Return the text content of the document
+    * Based on the tool textract available at https://github.com/dbashford/textract
+    * Requirements :
+    * All OS :
+    * - pdftotext
+    * - tesseract
+    * - drawingtotext (for DXF files)
+    * Not for OSX :
+    * - antiword
+    * - unrtf
+    */
+    protected function extract_text($preserveLinesBreaks = true) {
+        ini_set('max_execution_time',0);
+        $content = '';
+        if (file_exists($this->get_full_path())) {
+            $pathexec = str_replace(" ","\ ",$this->get_full_path());
+            $a = $b = null;
+            $extrapath = defined("EXTRA_PATH") ? 'PATH=$PATH:'.EXTRA_PATH : '';
+            $content = shell_exec(escapeshellcmd($extrapath . ' textract '.escapeshellarg($pathexec).' --preserveLineBreaks '. ($preserveLinesBreaks ? 'true' : 'false')));
+        }
+        return $content;
     }
 }
