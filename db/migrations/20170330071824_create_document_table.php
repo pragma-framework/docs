@@ -2,15 +2,13 @@
 
 use Phinx\Migration\AbstractMigration;
 
-use Pragma\Docs\Models\Document;
-
 class CreateDocumentTable extends AbstractMigration
 {
     public function change()
     {
         if(defined('ORM_ID_AS_UID') && ORM_ID_AS_UID){
           $strategy = defined('ORM_UID_STRATEGY') && ORM_UID_STRATEGY == 'mysql' ? 'mysql' : 'php';
-          $table = $this->table(Document::getTableName(), ['id' => false, 'primary_key' => 'id']);
+          $table = $this->table('documents', ['id' => false, 'primary_key' => 'id']);
           switch($strategy){
             case 'mysql':
               $table->addColumn('id', 'char', ['limit' => 36]);
@@ -22,7 +20,7 @@ class CreateDocumentTable extends AbstractMigration
           }
         }
         else{
-          $table = $this->table(Document::getTableName());
+          $table = $this->table('documents');
         }
         $table->addColumn("name", "string")
               ->addColumn("path", "string")

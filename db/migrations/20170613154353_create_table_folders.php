@@ -2,9 +2,6 @@
 
 use Phinx\Migration\AbstractMigration;
 
-use Pragma\Docs\Models\Document;
-use Pragma\Docs\Models\Folder;
-
 class CreateTableFolders extends AbstractMigration
 {
     /**
@@ -30,10 +27,10 @@ class CreateTableFolders extends AbstractMigration
      */
     public function change()
     {
-        $tableDoc = $this->table(Document::getTableName());
+        $tableDoc = $this->table('documents');
         if(defined('ORM_ID_AS_UID') && ORM_ID_AS_UID){
           $strategy = defined('ORM_UID_STRATEGY') && ORM_UID_STRATEGY == 'mysql' ? 'mysql' : 'php';
-          $table = $this->table(Folder::getTableName(), ['id' => false, 'primary_key' => 'id']);
+          $table = $this->table('folders', ['id' => false, 'primary_key' => 'id']);
           switch($strategy){
             case 'mysql':
               $table->addColumn('id', 'char', ['limit' => 36])
@@ -51,7 +48,7 @@ class CreateTableFolders extends AbstractMigration
           }
         }
         else{
-          $table = $this->table(Folder::getTableName());
+          $table = $this->table('folders');
           $table->addColumn('parent_id', 'integer', ['default' => 0])
             ->addColumn('root_id', 'integer', ['default' => 0]);
           $tableDoc->addColumn('folder_id', 'integer', ['default'=>0, 'after'=>'id']);
