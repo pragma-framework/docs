@@ -1,6 +1,7 @@
 <?php
 
 use Phinx\Migration\AbstractMigration;
+use Pragma\Docs\Models\Document;
 
 class AddUidToDocuments extends AbstractMigration
 {
