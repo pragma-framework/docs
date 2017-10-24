@@ -7,7 +7,6 @@ class AddUidToDocuments extends AbstractMigration
 {
 		public function change()
 		{
-			$strategy = defined('ORM_UID_STRATEGY') && ORM_UID_STRATEGY == 'mysql' ? 'mysql' : 'php';
 			$table = $this->table('documents');
 			$table->addColumn("uid", "string")
 					->update();

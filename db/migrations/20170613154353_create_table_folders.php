@@ -29,7 +29,7 @@ class CreateTableFolders extends AbstractMigration
     {
         $tableDoc = $this->table('documents');
         if(defined('ORM_ID_AS_UID') && ORM_ID_AS_UID){
-          $strategy = ! defined('ORM_UID_STRATEGY') ? 'php' : && ORM_UID_STRATEGY;
+          $strategy = ! defined('ORM_UID_STRATEGY') ? 'php' : ORM_UID_STRATEGY;
           $table = $this->table('folders', ['id' => false, 'primary_key' => 'id']);
           switch($strategy){
             case 'mysql':
