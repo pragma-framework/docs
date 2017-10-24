@@ -7,10 +7,11 @@ class CreateDocumentTable extends AbstractMigration
     public function change()
     {
         if(defined('ORM_ID_AS_UID') && ORM_ID_AS_UID){
-          $strategy = defined('ORM_UID_STRATEGY') && ORM_UID_STRATEGY == 'mysql' ? 'mysql' : 'php';
+          $strategy = ! defined('ORM_UID_STRATEGY') ? 'php' : && ORM_UID_STRATEGY;
           $table = $this->table('documents', ['id' => false, 'primary_key' => 'id']);
           switch($strategy){
             case 'mysql':
+            case 'laravel-uuid':
               $table->addColumn('id', 'char', ['limit' => 36]);
               break;
             default:
