@@ -114,9 +114,9 @@ class Document extends Model{
         if (file_exists($filepath) && !empty($this->path)) {
             $UserBrowser = '';
             if (!empty($_SERVER['HTTP_USER_AGENT'])) {
-                if (preg_match('Opera(/| )([0-9].[0-9]{1,2})', $_SERVER['HTTP_USER_AGENT']) !== false) {
+                if (preg_match('#Opera(/| )([0-9].[0-9]{1,2})#', $_SERVER['HTTP_USER_AGENT']) !== false) {
                     $UserBrowser = "Opera";
-                } elseif (preg_match('MSIE ([0-9].[0-9]{1,2})', $_SERVER['HTTP_USER_AGENT']) !== false) {
+                } elseif (preg_match('#MSIE ([0-9].[0-9]{1,2})#', $_SERVER['HTTP_USER_AGENT']) !== false) {
                     $UserBrowser = "IE";
                 }
             }
