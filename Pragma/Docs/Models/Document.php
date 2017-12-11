@@ -69,7 +69,11 @@ class Document extends Model{
             $finalfilename = $this->uid . '.' . $extension;
             $path = $context . '/' . $finalfilename;
             $realpath = $this->build_path($context).'/'.$finalfilename;
-            move_uploaded_file($tmp_name, $realpath);
+
+            if (!move_uploaded_file($tmp_name, $realpath)) {
+                throw new Exception('Can\'t move file: '.(string)$tmp_name);
+            }
+
             $this->name = $file["name"];
             $this->size = $file["size"];
             $this->path = $path;
@@ -89,7 +93,12 @@ class Document extends Model{
         $path = DOC_STORE.$this->upload_path.(substr($context,0,1) == '/'?'':'/').$context;
         if( ! file_exists($path) ){
             $oldumask = umask(0);
-            mkdir($path, 0775, true); // or even 01777 so you get the sticky bit set
+
+            // or even 01777 so you get the sticky bit set
+            if (!mkdir($path, 0775, true)) {
+                throw new Exception('Can\'t build path: '.(string)$path);
+            }
+
             umask($oldumask);
         }
         return $path;
