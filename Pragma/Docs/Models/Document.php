@@ -8,6 +8,7 @@ class Document extends Model{
 
     protected $upload_path = 'uploads';
     protected $has_physical_file_changed = false;
+    protected $validExtensions = [];
 
     public function __construct(){
         // base on ./vendor/pragma-framework/docs/Pragma/Docs/Models/ path
@@ -27,7 +28,16 @@ class Document extends Model{
             $this->updated_at = date('Y-m-d H:i:s');
         }
 
-        return parent::save();
+        if($this->checkIsValidExtensions()){
+            parent::save();
+            if($this->is_new()){
+                $this->delete_physical_file();
+            }
+            return $this;
+        }else{
+            $this->delete_physical_file();
+            return $this;
+        }
     }
 
     public function delete(){
@@ -140,22 +150,9 @@ class Document extends Model{
                 /// important for download im most browser
                 $mime_type = ($UserBrowser == 'IE' || $UserBrowser == 'Opera') ?
                  'application/octetstream' : 'application/octet-stream';
-                switch(strrchr(basename($this->name), '.')) {
-                    case ".gz": $mime_type = "application/x-gzip"; break;
-                    case ".tgz": $mime_type = "application/x-gzip"; break;
-                    case ".zip": $mime_type = "application/zip"; break;
-                    case ".pdf": $mime_type = "application/pdf"; break;
-                    case ".doc": $mime_type = "application/msword"; break;
-                    case ".ppt": $mime_type = "application/mspowerpoint"; break;
-                    case ".xls": $mime_type = "application/excel"; break;
-                    case ".png": $mime_type = "image/png"; break;
-                    case ".gif": $mime_type = "image/gif"; break;
-                    case ".jpeg": $mime_type = "image/jpeg"; break;
-                    case ".jpg": $mime_type = "image/jpeg"; break;
-                    case ".txt": $mime_type = "text/plain"; break;
-                    case ".htm": $mime_type = "text/html"; break;
-                    case ".html": $mime_type = "text/html"; break;
-                }
+
+                $repository = new \Dflydev\ApacheMimeTypes\PhpRepository();
+                $mime_type = $repository->findType(substr(strrchr(basename($this->name), '.'), 1));
             }
             if(empty($mime_type) || $mime_type === false){
                 $mime_type = ($UserBrowser == 'IE' || $UserBrowser == 'Opera') ?
@@ -244,5 +241,42 @@ class Document extends Model{
             $content = shell_exec(escapeshellcmd($extrapath . ' textract '.escapeshellarg($pathexec).' --preserveLineBreaks '. ($preserveLinesBreaks ? 'true' : 'false')));
         }
         return $content;
+    }
+
+    /*
+    Permet de définir une liste d'extensions attendues
+    Ex: ['pdf', 'doc', 'docx']
+     */
+    public function defineValidExtentions($extensions = []){
+        $this->validExtensions = $extensions;
+        return $this;
+    }
+
+    public function checkIsValidExtensions(){
+        $path = $this->get_full_path();
+        if(!empty($path) && file_exists($path) && !empty($this->validExtensions)){
+            if(function_exists('mime_content_type')){
+                $mime_type = mime_content_type($path);
+            }elseif(function_exists('finfo_open')){
+                $finfo = finfo_open(FILEINFO_MIME);
+                $mime_type = finfo_file($finfo, $path);
+                finfo_close($finfo);
+            }else{
+                return in_array($this->extension, $this->validExtensions);
+            }
+
+            if(!empty($mime_type)){
+                $repository = new \Dflydev\ApacheMimeTypes\PhpRepository();
+                $extensions = $repository->findExtensions($mime_type);
+
+                foreach($extensions as $ext){
+                    if(in_array($ext, $this->validExtensions)){
+                        return true;
+                    }
+                }
+            }
+            return false; // Mime Type non trouvé
+        }
+        return true;
     }
 }
