@@ -9,7 +9,7 @@
     ],
     "require": {
         "php": ">=5.3.0",
-        "pragma-framework/core": ">=1.0.0",
+        "pragma-framework/core": "*",
         "robmorgan/phinx": ">=0.7.0",
         "dflydev/apache-mime-types": ">=1.0"
     },
