@@ -80,8 +80,15 @@ class Document extends Model{
             $path = $context . '/' . $finalfilename;
             $realpath = $this->build_path($context).'/'.$finalfilename;
 
-            if (!move_uploaded_file($tmp_name, $realpath)) {
-                throw new \Exception('Can\'t move file: '.(string)$tmp_name);
+            if (is_uploaded_file($tmp_name)) {
+                if (!move_uploaded_file($tmp_name, $realpath)) {
+                    throw new \Exception('Can\'t move file: '.(string)$tmp_name);
+                }
+            }
+            else {
+                if (!rename($tmp_name, $realpath)) {
+                    throw new \Exception('Can\'t move file: '.(string)$tmp_name);
+                }
             }
 
             $this->name = $file["name"];
