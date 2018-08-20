@@ -7,6 +7,7 @@ class Document extends Model{
     CONST TABLENAME = 'documents';
 
     protected $upload_path = 'uploads';
+    protected $public_extension = 'public';
     protected $has_physical_file_changed = false;
     protected $validExtensions = [];
 
@@ -61,6 +62,7 @@ class Document extends Model{
             'name' => $this->name,
             'size' => $this->size,
             'extension' => $this->extension,
+            'is_public' => $this->is_public,
             'path' => $path,
         ))->save();
     }
@@ -75,7 +77,7 @@ class Document extends Model{
             $tmp_name = $file["tmp_name"];
             $extension = strtolower(pathinfo($file['name'],PATHINFO_EXTENSION));
             $context = date('Y/m');
-            $this->uid = uniqid();
+            $this->uid = $this->is_public ? uniqid('', true) : uniqid();
             $finalfilename = $this->uid . '.' . $extension;
             $path = $context . '/' . $finalfilename;
             $realpath = $this->build_path($context).'/'.$finalfilename;
@@ -107,7 +109,7 @@ class Document extends Model{
     }
 
     protected function build_path($context){
-        $path = DOC_STORE.$this->upload_path.(substr($context,0,1) == '/'?'':'/').$context;
+        $path = DOC_STORE.$this->upload_path.($this->is_public ? '/public/' : '').(substr($context,0,1) == '/'?'':'/').$context;
         if( ! file_exists($path) ){
             $oldumask = umask(0);
 
@@ -122,7 +124,7 @@ class Document extends Model{
     }
 
     public function get_full_path(){
-        return DOC_STORE.$this->upload_path.'/'.$this->path;
+        return DOC_STORE.$this->upload_path.($this->is_public ? '/public' : '').'/'.$this->path;
     }
 
     protected function delete_physical_file(){
@@ -251,7 +253,7 @@ class Document extends Model{
     }
 
     /*
-    Permet de définir une liste d'extensions attendues
+    Allow the developper to define a whitelist of extensions
     Ex: ['pdf', 'doc', 'docx']
      */
     public function defineValidExtentions($extensions = []){
@@ -285,5 +287,9 @@ class Document extends Model{
             return false; // Mime Type non trouvé
         }
         return true;
+    }
+
+    public function setPublic() {
+        $this->is_public = true;
     }
 }
