@@ -7,13 +7,18 @@ class Document extends Model{
     CONST TABLENAME = 'documents';
 
     protected $upload_path = 'uploads';
-    protected $public_extension = 'public';
     protected $has_physical_file_changed = false;
     protected $validExtensions = [];
+
+    protected $initial_public_status = null;
+    protected $initial_fullpath = null;
 
     public function __construct(){
         // base on ./vendor/pragma-framework/docs/Pragma/Docs/Models/ path
         defined('DOC_STORE') OR define('DOC_STORE',realpath(__DIR__.'/../../../../../../').'/data/');
+        $this->pushHook('after_open', 'initPublicState');
+        $this->pushHook('before_save', 'checkPublicChanges');
+        $this->pushHook('after_save', 'initPublicState');
         return parent::__construct(self::getTableName());
     }
 
@@ -48,16 +53,23 @@ class Document extends Model{
         }
     }
 
-    public function cloneDoc(){
-        $filepath = $this->get_full_path();
+    protected function copy_physical_path($fullpath = null) {
+        $filepath = is_null($fullpath) ? $this->get_full_path() : $fullpath;
         $path = "";
+        $uid = "";
         if (file_exists($filepath) && !empty($this->path)) {
             $context = date('Y/m');
-            $finalfilename = uniqid() . '.' . $this->extension;
+            $uid = $this->is_public ? uniqid('', true) : uniqid();
+            $finalfilename = $uid . '.' . $this->extension;
             $path = $context . '/' . $finalfilename;
             $realpath = $this->build_path($context).'/'.$finalfilename;
             copy($filepath, $realpath);
         }
+        return [$path, $uid];
+    }
+
+    public function cloneDoc() {
+        list($path, $uid) = $this->copy_physical_path();
         return self::build(array(
             'name' => $this->name,
             'size' => $this->size,
@@ -127,9 +139,10 @@ class Document extends Model{
         return DOC_STORE.$this->upload_path.($this->is_public ? '/public' : '').'/'.$this->path;
     }
 
-    protected function delete_physical_file(){
-        if(file_exists($this->get_full_path()) && !empty($this->path)){
-            unlink($this->get_full_path());
+    protected function delete_physical_file($fullpath = null){
+        $filepath = is_null($fullpath) ? $this->get_full_path() : $fullpath;
+        if(file_exists($filepath) && !empty($this->path)){
+            unlink($filepath);
         }
     }
 
@@ -291,5 +304,19 @@ class Document extends Model{
 
     public function setPublic() {
         $this->is_public = true;
+    }
+
+    protected function initPublicState() {
+        $this->initial_public_status = $this->is_public;
+        $this->initial_fullpath = $this->get_full_path();
+    }
+
+    protected function checkPublicChanges() {
+        if(!is_null($this->initial_public_status) && $this->initial_public_status != $this->is_public) { //on doit déplacer le fichier
+            list($path, $uid) = $this->copy_physical_path($this->initial_fullpath);
+            $this->delete_physical_file($this->initial_fullpath);
+            $this->path = $path;
+            $this->uid = $uid;
+        }
     }
 }
