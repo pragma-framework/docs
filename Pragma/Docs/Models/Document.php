@@ -90,7 +90,12 @@ class Document extends Model{
             $extension = strtolower(pathinfo($file['name'],PATHINFO_EXTENSION));
             $context = date('Y/m');
             $this->uid = $this->is_public ? uniqid('', true) : uniqid();
-            $finalfilename = $this->uid . '.' . $extension;
+            if (!empty($extension)) {
+                $finalfilename = $this->uid . '.' . $extension;
+            }
+            else {
+                $finalfilename = $this->uid;
+            }
             $path = $context . '/' . $finalfilename;
             $realpath = $this->build_path($context).'/'.$finalfilename;
 
