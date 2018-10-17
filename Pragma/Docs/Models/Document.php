@@ -87,7 +87,10 @@ class Document extends Model{
             }
             //on doit déplacer le fichier
             $tmp_name = $file["tmp_name"];
-            $extension = strtolower(pathinfo($file['name'],PATHINFO_EXTENSION));
+            $extension = self::getExtension($file['tmp_name']);
+            if(empty($extension)){
+                $extension = strtolower(pathinfo($file['name'],PATHINFO_EXTENSION));
+            }
             $context = date('Y/m');
             $this->uid = $this->is_public ? uniqid('', true) : uniqid();
             if (!empty($extension)) {
@@ -179,7 +182,7 @@ class Document extends Model{
                  'application/octetstream' : 'application/octet-stream';
 
                 $repository = new \Dflydev\ApacheMimeTypes\PhpRepository();
-                $mime_type = $repository->findType(substr(strrchr(basename($this->name), '.'), 1));
+                $mime_type = $repository->findType($this->extension);
             }
             if(empty($mime_type) || $mime_type === false){
                 $mime_type = ($UserBrowser == 'IE' || $UserBrowser == 'Opera') ?
@@ -277,6 +280,29 @@ class Document extends Model{
     public function defineValidExtentions($extensions = []){
         $this->validExtensions = $extensions;
         return $this;
+    }
+
+    protected static function getExtension($path){
+        if(!empty($path) && file_exists($path)){
+            if(function_exists('mime_content_type')){
+                $mime_type = mime_content_type($path);
+            }elseif(function_exists('finfo_open')){
+                $finfo = finfo_open(FILEINFO_MIME);
+                $mime_type = finfo_file($finfo, $path);
+                finfo_close($finfo);
+            }
+            $extension = strtolower(pathinfo($path,PATHINFO_EXTENSION));
+            if(!empty($mime_type)){
+                $repository = new \Dflydev\ApacheMimeTypes\PhpRepository();
+                $extensions = $repository->findExtensions($mime_type);
+
+                if(empty($extension) || !in_array($extension, $extensions)){
+                    return current($extensions);
+                } // Else extension exist & return it
+            }
+            return $extension;
+        }
+        return '';
     }
 
     public function checkIsValidExtensions(){
