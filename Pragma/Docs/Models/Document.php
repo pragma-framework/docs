@@ -15,7 +15,7 @@ class Document extends Model{
 
     public function __construct(){
         // base on ./vendor/pragma-framework/docs/Pragma/Docs/Models/ path
-        defined('DOC_STORE') OR define('DOC_STORE',realpath(__DIR__.'/../../../../../../').'/data/');
+        defined('DOC_STORE') || define('DOC_STORE',realpath(__DIR__.'/../../../../../../').'/data/');
         $this->pushHook('after_open', 'initPublicState');
         $this->pushHook('before_save', 'checkPublicChanges');
         $this->pushHook('after_save', 'initPublicState');
@@ -23,7 +23,7 @@ class Document extends Model{
     }
 
     public static function getTableName(){
-        defined('DB_PREFIX') OR define('DB_PREFIX','pragma_');
+        defined('DB_PREFIX') || define('DB_PREFIX','pragma_');
         return DB_PREFIX.self::TABLENAME;
     }
 
