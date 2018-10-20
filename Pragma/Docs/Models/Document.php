@@ -2,6 +2,7 @@
 namespace Pragma\Docs\Models;
 
 use Pragma\ORM\Model;
+use Pragma\Docs\Exceptions\DocumentException;
 
 class Document extends Model{
     CONST TABLENAME = 'documents';
@@ -105,12 +106,12 @@ class Document extends Model{
 
             if (is_uploaded_file($tmp_name)) {
                 if (!move_uploaded_file($tmp_name, $realpath)) {
-                    throw new \Exception('Can\'t move file: '.(string)$tmp_name);
+                    throw new DocumentException(sprintf(DocumentException::CANT_MOVE_MSG, (string)$tmp_name));
                 }
             }
             else {
                 if (!rename($tmp_name, $realpath)) {
-                    throw new \Exception('Can\'t move file: '.(string)$tmp_name);
+                    throw new DocumentException(sprintf(DocumentException::CANT_MOVE_MSG, (string)$tmp_name));
                 }
             }
 
@@ -136,7 +137,7 @@ class Document extends Model{
 
             // or even 01777 so you get the sticky bit set
             if (!mkdir($path, 0775, true)) {
-                throw new \Exception('Can\'t build path: '.(string)$path);
+                throw new DocumentException(sprintf(DocumentException::CANT_BUILD_PATH_MSG, (string)$path));
             }
 
             umask($oldumask);
