@@ -268,7 +268,6 @@ class Document extends Model{
         $content = '';
         if (file_exists($this->get_full_path())) {
             $pathexec = str_replace(" ","\ ",$this->get_full_path());
-            $a = $b = null;
             $extrapath = defined("EXTRA_PATH") ? 'PATH=$PATH:'.EXTRA_PATH : '';
             $content = shell_exec(escapeshellcmd($extrapath . ' textract '.escapeshellarg($pathexec).' --preserveLineBreaks '. ($preserveLinesBreaks ? 'true' : 'false')));
         }
