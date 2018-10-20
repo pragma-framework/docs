@@ -76,6 +76,7 @@ class Document extends Model{
             'extension' => $this->extension,
             'is_public' => $this->is_public,
             'path' => $path,
+            'uid' => $uid,
         ))->save();
     }
 
