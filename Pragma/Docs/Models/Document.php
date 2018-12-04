@@ -2,6 +2,7 @@
 namespace Pragma\Docs\Models;
 
 use Pragma\ORM\Model;
+use Pragma\Docs\Exceptions\DocumentException;
 
 class Document extends Model{
     CONST TABLENAME = 'documents';
@@ -15,7 +16,7 @@ class Document extends Model{
 
     public function __construct(){
         // base on ./vendor/pragma-framework/docs/Pragma/Docs/Models/ path
-        defined('DOC_STORE') OR define('DOC_STORE',realpath(__DIR__.'/../../../../../../').'/data/');
+        defined('DOC_STORE') || define('DOC_STORE',realpath(__DIR__.'/../../../../../../').'/data/');
         $this->pushHook('after_open', 'initPublicState');
         $this->pushHook('before_save', 'checkPublicChanges');
         $this->pushHook('after_save', 'initPublicState');
@@ -23,7 +24,7 @@ class Document extends Model{
     }
 
     public static function getTableName(){
-        defined('DB_PREFIX') OR define('DB_PREFIX','pragma_');
+        defined('DB_PREFIX') || define('DB_PREFIX','pragma_');
         return DB_PREFIX.self::TABLENAME;
     }
 
@@ -76,6 +77,7 @@ class Document extends Model{
             'extension' => $this->extension,
             'is_public' => $this->is_public,
             'path' => $path,
+            'uid' => $uid,
         ))->save();
     }
 
@@ -87,7 +89,10 @@ class Document extends Model{
             }
             //on doit déplacer le fichier
             $tmp_name = $file["tmp_name"];
-            $extension = strtolower(pathinfo($file['name'],PATHINFO_EXTENSION));
+            $extension = self::getExtension($file['tmp_name']);
+            if(empty($extension)){
+                $extension = strtolower(pathinfo($file['name'],PATHINFO_EXTENSION));
+            }
             $context = date('Y/m');
             $this->uid = $this->is_public ? uniqid('', true) : uniqid();
             if (!empty($extension)) {
@@ -101,12 +106,12 @@ class Document extends Model{
 
             if (is_uploaded_file($tmp_name)) {
                 if (!move_uploaded_file($tmp_name, $realpath)) {
-                    throw new \Exception('Can\'t move file: '.(string)$tmp_name);
+                    throw new DocumentException(sprintf(DocumentException::CANT_MOVE_MSG, (string)$tmp_name));
                 }
             }
             else {
                 if (!rename($tmp_name, $realpath)) {
-                    throw new \Exception('Can\'t move file: '.(string)$tmp_name);
+                    throw new DocumentException(sprintf(DocumentException::CANT_MOVE_MSG, (string)$tmp_name));
                 }
             }
 
@@ -132,7 +137,7 @@ class Document extends Model{
 
             // or even 01777 so you get the sticky bit set
             if (!mkdir($path, 0775, true)) {
-                throw new \Exception('Can\'t build path: '.(string)$path);
+                throw new DocumentException(sprintf(DocumentException::CANT_BUILD_PATH_MSG, (string)$path));
             }
 
             umask($oldumask);
@@ -179,7 +184,7 @@ class Document extends Model{
                  'application/octetstream' : 'application/octet-stream';
 
                 $repository = new \Dflydev\ApacheMimeTypes\PhpRepository();
-                $mime_type = $repository->findType(substr(strrchr(basename($this->name), '.'), 1));
+                $mime_type = $repository->findType($this->extension);
             }
             if(empty($mime_type) || $mime_type === false){
                 $mime_type = ($UserBrowser == 'IE' || $UserBrowser == 'Opera') ?
@@ -263,7 +268,6 @@ class Document extends Model{
         $content = '';
         if (file_exists($this->get_full_path())) {
             $pathexec = str_replace(" ","\ ",$this->get_full_path());
-            $a = $b = null;
             $extrapath = defined("EXTRA_PATH") ? 'PATH=$PATH:'.EXTRA_PATH : '';
             $content = shell_exec(escapeshellcmd($extrapath . ' textract '.escapeshellarg($pathexec).' --preserveLineBreaks '. ($preserveLinesBreaks ? 'true' : 'false')));
         }
@@ -277,6 +281,29 @@ class Document extends Model{
     public function defineValidExtentions($extensions = []){
         $this->validExtensions = $extensions;
         return $this;
+    }
+
+    protected static function getExtension($path){
+        if(!empty($path) && file_exists($path)){
+            if(function_exists('mime_content_type')){
+                $mime_type = mime_content_type($path);
+            }elseif(function_exists('finfo_open')){
+                $finfo = finfo_open(FILEINFO_MIME);
+                $mime_type = finfo_file($finfo, $path);
+                finfo_close($finfo);
+            }
+            $extension = strtolower(pathinfo($path,PATHINFO_EXTENSION));
+            if(!empty($mime_type)){
+                $repository = new \Dflydev\ApacheMimeTypes\PhpRepository();
+                $extensions = $repository->findExtensions($mime_type);
+
+                if(empty($extension) || !in_array($extension, $extensions)){
+                    return current($extensions);
+                } // Else extension exist & return it
+            }
+            return $extension;
+        }
+        return '';
     }
 
     public function checkIsValidExtensions(){
