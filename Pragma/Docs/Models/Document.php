@@ -20,6 +20,11 @@ class Document extends Model{
         $this->pushHook('after_open', 'initPublicState');
         $this->pushHook('before_save', 'checkPublicChanges');
         $this->pushHook('after_save', 'initPublicState');
+
+        if(defined('PRAGMA_SET_CREATED_UPDATED_BY')){
+            $this->pushHook('before_save', PRAGMA_SET_CREATED_UPDATED_BY);
+        }
+
         return parent::__construct(self::getTableName());
     }
 

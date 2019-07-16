@@ -16,6 +16,11 @@ class Folder extends Model{
         $this->pushHook('before_save', 'testFolderName');
         $this->pushHook('before_save', 'detectChangeFolder');
         $this->pushHook('before_delete', 'deleteFolder');
+
+        if(defined('PRAGMA_SET_CREATED_UPDATED_BY')){
+            $this->pushHook('before_save', PRAGMA_SET_CREATED_UPDATED_BY);
+        }
+
         return parent::__construct(self::getTableName());
     }
 

@@ -22,9 +22,11 @@ Options needed:
 
 `DOC_STORE` directory need read/write access for www-data.
 
-`EXTRA_PATH`is used in the Document::extract_text method. This method allows you to get the text content of a document and requires `textract` tool on the server. `EXTRA_PATH` is helpfull when the PATH accessible by PHP does not contain the directory where `textract` is.
+`PRAGMA_SET_CREATED_UPDATED_BY` is a generic method to define created_by & updated_by fields on documents and folders.
 
-As you already know,tThis functionnality requires the `textract` tool on the server (https://github.com/dbashford/textract) and several dependencies based on your OS :
+`EXTRA_PATH` is used in the Document::extract_text method. This method allows you to get the text content of a document and requires `textract` tool on the server. `EXTRA_PATH` is helpfull when the PATH accessible by PHP does not contain the directory where `textract` is.
+
+As you already know, this functionnality requires the `textract` tool on the server (https://github.com/dbashford/textract) and several dependencies based on your OS :
 
 #### All OS :
 
