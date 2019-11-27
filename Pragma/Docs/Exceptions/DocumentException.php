@@ -6,6 +6,7 @@ class DocumentException extends \Exception{
 	const CANT_BUILD_PATH_ERROR = 2;
 
 	const CANT_MOVE_MSG = 'Can\'t move file: %s';
+	const CANT_COPY_MSG = 'Can\'t copy file: %s';
 	const CANT_BUILD_PATH_MSG = 'Can\'t build path: %s';
 
 	public function __toString(){

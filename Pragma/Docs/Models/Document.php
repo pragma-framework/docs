@@ -86,7 +86,7 @@ class Document extends Model{
         ))->save();
     }
 
-    public function handle_file($file){
+    public function handle_file($file, $copy = false){
         try{
             $this->has_physical_file_changed = true;
             if( ! $this->is_new() ){//on doit supprimer physiquement l'ancien fichier
@@ -115,8 +115,11 @@ class Document extends Model{
                 }
             }
             else {
-                if (!rename($tmp_name, $realpath)) {
+                if (! $copy && !rename($tmp_name, $realpath)) {
                     throw new DocumentException(sprintf(DocumentException::CANT_MOVE_MSG, (string)$tmp_name));
+                }
+                else if($copy && ! copy($tmp_name, $realpath)) {
+                    throw new DocumentException(sprintf(DocumentException::CANT_COPY_MSG, (string)$tmp_name));
                 }
             }
 
