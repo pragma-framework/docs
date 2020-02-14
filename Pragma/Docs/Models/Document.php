@@ -274,7 +274,7 @@ class Document extends Model{
     protected function extract_text($preserveLinesBreaks = true) {
         ini_set('max_execution_time',0);
         $content = '';
-        if (file_exists($this->get_full_path())) {
+        if (file_exists($this->get_full_path()) && is_file($this->get_full_path())) {
             $pathexec = str_replace(" ","\ ",$this->get_full_path());
             $extrapath = defined("EXTRA_PATH") ? 'PATH=$PATH:'.EXTRA_PATH : '';
             $content = shell_exec(escapeshellcmd($extrapath . ' textract '.escapeshellarg($pathexec).' --preserveLineBreaks '. ($preserveLinesBreaks ? 'true' : 'false')));
