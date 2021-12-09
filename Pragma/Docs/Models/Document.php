@@ -235,9 +235,9 @@ class Document extends Model{
                     header("Content-Length: ".$size);
                 }
 
-                @readfile($filepath);
                 @ob_flush();
                 @flush();
+                @readfile($filepath);
 
                 if (isset($new_length)) {
                     $size = $new_length;
