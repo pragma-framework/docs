@@ -93,6 +93,19 @@ class Folder extends Model{
         if(empty($this->name)){
             throw new FolderException(FolderException::EMPTY_NAME_MSG, FolderException::EMPTY_NAME_ERROR);
         }
+
+        // Folder's name unicity
+        $existing = self::forge()
+            ->where('parent_id', '=', $this->parent_id)
+            ->where('name', 'LIKE', $this->name);
+         if(!$this->is_new() && ! is_null($this->id) && !empty($this->id)){
+            $existing = $existing->where('id', '!=', $this->id);
+        }
+        $existing = $existing->limit(1)
+            ->get_arrays();
+        if(!empty($existing)){
+            throw new FolderException(FolderException::DUPLICATE_NAME_MSG, FolderException::DUPLICATE_NAME_ERROR);
+        }
     }
 
     public function detectChangeFolder(){
