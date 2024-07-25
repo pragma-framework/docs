@@ -38,7 +38,7 @@ class FileDownload
 					'application/octetstream' : 'application/octet-stream';
 			}
 
-			ini_set('memory_limit', '512M');
+			ini_set('memory_limit', '1024M');
 			header('Content-Type: ' . $mime_type);
 			if ($attachment) {
 				@ini_set('zlib.output_compression', 'Off');
