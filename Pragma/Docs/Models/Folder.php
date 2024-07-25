@@ -183,19 +183,12 @@ class Folder extends Model
     /**
      * Download direct files in this folder (zip)
      */
-    public function downloadfiles($attachment = true)
+    public function downloadfiles($withChildren = true, $attachment = true)
     {
         $zipPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . uniqid('', true) . '.zip';
         $zip = new \ZipArchive();
         $zip->open($zipPath, \ZipArchive::CREATE);
-        $files = Document::forge()
-            ->where('folder_id', '=', $this->id)
-            ->get_objects();
-        foreach ($files as $f) {
-            if (file_exists($f->get_full_path())) {
-                $zip->addFile($f->get_full_path(), $f->name);
-            }
-        }
+        $this->addFileInZip($zip, $withChildren);
         $nbZip = $zip->count();
         $zip->close();
 
@@ -212,5 +205,28 @@ class Folder extends Model
             }
             return false;
         }
+    }
+
+    protected function addFileInZip(\ZipArchive $zip, $withChildren = true, $dir = '')
+    {
+        $files = Document::forge()
+            ->where('folder_id', '=', $this->id)
+            ->get_objects();
+        foreach ($files as $f) {
+            if (file_exists($f->get_full_path())) {
+                $zip->addFile($f->get_full_path(), $dir . $f->name);
+            }
+        }
+        if ($withChildren) {
+            $folders = Folder::forge()
+                ->where('parent_id', '=', $this->id)
+                ->get_objects();
+            foreach ($folders as $f) {
+                if ($zip->addEmptyDir($dir . $f->name)) {
+                    $f->addFileInZip($zip, $withChildren, $dir . $f->name . DIRECTORY_SEPARATOR);
+                }
+            }
+        }
+        return $zip;
     }
 }
