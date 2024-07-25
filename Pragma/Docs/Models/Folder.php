@@ -5,6 +5,7 @@ namespace Pragma\Docs\Models;
 use Pragma\ORM\Model;
 use Pragma\Docs\Models\Document;
 use Pragma\Docs\Exceptions\FolderException;
+use Pragma\Docs\Helpers\FileDownload;
 
 class Folder extends Model
 {
@@ -202,58 +203,7 @@ class Folder extends Model
         error_reporting(0);
 
         if (file_exists($zipPath) && $nbZip) {
-            ini_set('memory_limit', '512M');
-            header('Content-Type: application/zip');
-            if ($attachment) {
-                @ini_set('zlib.output_compression', 'Off');
-
-                // new download function works with IE6+SSL(http://fr.php.net/manual/fr/function.header.php#65404)
-                $zipPath = rawurldecode($zipPath);
-                $size = filesize($zipPath);
-
-                header('Content-Disposition: attachment; filename="' . $this->name . '.zip"');
-                header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
-                header('Accept-Ranges: bytes');
-                header('Cache-control: private');
-                header('Pragma: private');
-
-                @ob_end_clean();
-                //while (ob_get_contents()) @ob_end_clean();
-                //@set_time_limit(3600);
-
-                ob_end_flush();
-
-                /////  multipart-download and resume-download
-                if (isset($_SERVER['HTTP_RANGE'])) {
-
-                    list($a, $range) = explode("=", $_SERVER['HTTP_RANGE']);
-                    str_replace($range, "-", $range);
-                    $size2 = $size - 1;
-                    $new_length = $size - $range;
-                    header("HTTP/1.1 206 Partial Content");
-                    header("Content-Length: $new_length");
-                    header("Content-Range: bytes $range$size2/$size");
-                } else {
-                    $size2 = $size - 1;
-                    header("Content-Length: " . $size);
-                }
-
-                @ob_flush();
-                @flush();
-                @readfile($zipPath);
-
-                if (isset($new_length)) {
-                    $size = $new_length;
-                }
-            } else {
-                header("Content-disposition: inline; filename={$this->name}.zip");
-                header("Content-Length: " . filesize($zipPath));
-                header("Pragma: no-cache");
-                header("Cache-Control: must-revalidate, post-check=0, pre-check=0, public");
-                header("Expires: 0");
-
-                @readfile($zipPath);
-            }
+            FileDownload::download($zipPath, $this->name . '.zip', 'zip', $attachment);
             unlink($zipPath);
             die();
         } else {

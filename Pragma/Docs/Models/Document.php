@@ -4,6 +4,7 @@ namespace Pragma\Docs\Models;
 
 use Pragma\ORM\Model;
 use Pragma\Docs\Exceptions\DocumentException;
+use Pragma\Docs\Helpers\FileDownload;
 
 class Document extends Model
 {
@@ -181,90 +182,10 @@ class Document extends Model
         $filepath = $this->get_full_path();
 
         if (file_exists($filepath) && !empty($this->path)) {
-            $UserBrowser = '';
-            if (!empty($_SERVER['HTTP_USER_AGENT'])) {
-                if (preg_match('#Opera(/| )([0-9].[0-9]{1,2})#', $_SERVER['HTTP_USER_AGENT']) !== false) {
-                    $UserBrowser = "Opera";
-                } elseif (preg_match('#MSIE ([0-9].[0-9]{1,2})#', $_SERVER['HTTP_USER_AGENT']) !== false) {
-                    $UserBrowser = "IE";
-                }
-            }
-
-            if (function_exists('mime_content_type')) {
-                $mime_type = mime_content_type($filepath);
-            } elseif (function_exists('finfo_open')) {
-                $finfo = finfo_open(FILEINFO_MIME);
-                $mime_type = finfo_file($finfo, $filepath);
-                finfo_close($finfo);
-            } else {
-                /// important for download im most browser
-                $mime_type = ($UserBrowser == 'IE' || $UserBrowser == 'Opera') ?
-                    'application/octetstream' : 'application/octet-stream';
-
-                $repository = new \Dflydev\ApacheMimeTypes\PhpRepository();
-                $mime_type = $repository->findType($this->extension);
-            }
-            if (empty($mime_type) || $mime_type === false) {
-                $mime_type = ($UserBrowser == 'IE' || $UserBrowser == 'Opera') ?
-                    'application/octetstream' : 'application/octet-stream';
-            }
-
-            ini_set('memory_limit', '512M');
-            if ($attachment) {
-                @ini_set('zlib.output_compression', 'Off');
-
-                // new download function works with IE6+SSL(http://fr.php.net/manual/fr/function.header.php#65404)
-                $filepath = rawurldecode($filepath);
-                $size = filesize($filepath);
-
-                header('Content-Type: ' . $mime_type);
-                header('Content-Disposition: attachment; filename="' . $this->name . '"');
-                header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
-                header('Accept-Ranges: bytes');
-                header('Cache-control: private');
-                header('Pragma: private');
-
-                @ob_end_clean();
-                //while (ob_get_contents()) @ob_end_clean();
-                //@set_time_limit(3600);
-
-                ob_end_flush();
-
-                /////  multipart-download and resume-download
-                if (isset($_SERVER['HTTP_RANGE'])) {
-
-                    list($a, $range) = explode("=", $_SERVER['HTTP_RANGE']);
-                    str_replace($range, "-", $range);
-                    $size2 = $size - 1;
-                    $new_length = $size - $range;
-                    header("HTTP/1.1 206 Partial Content");
-                    header("Content-Length: $new_length");
-                    header("Content-Range: bytes $range$size2/$size");
-                } else {
-                    $size2 = $size - 1;
-                    header("Content-Length: " . $size);
-                }
-
-                @ob_flush();
-                @flush();
-                @readfile($filepath);
-
-                if (isset($new_length)) {
-                    $size = $new_length;
-                }
-            } else {
-                header("Content-disposition: inline; filename={$this->name}");
-                header('Content-Type: ' . $mime_type);
-                header("Content-Length: " . filesize($filepath));
-                header("Pragma: no-cache");
-                header("Cache-Control: must-revalidate, post-check=0, pre-check=0, public");
-                header("Expires: 0");
-
-                @readfile($filepath);
-            }
+            FileDownload::download($filepath, $this->name, $this->extension, $attachment);
             die();
         } else {
-            return (false);
+            return false;
         }
     }
 
