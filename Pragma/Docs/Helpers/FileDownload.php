@@ -40,6 +40,7 @@ class FileDownload
 
 			ini_set('memory_limit', '1024M');
 			header('Content-Type: ' . $mime_type);
+			header('Access-Control-Expose-Headers: Content-Disposition'); // permet d'avoir accès au filename depuis axios
 			if ($attachment) {
 				@ini_set('zlib.output_compression', 'Off');
 
