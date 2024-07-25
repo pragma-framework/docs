@@ -1,55 +1,62 @@
 <?php
+
 namespace Pragma\Docs\Models;
 
 use Pragma\ORM\Model;
 use Pragma\Docs\Models\Document;
 use Pragma\Docs\Exceptions\FolderException;
 
-class Folder extends Model{
-    CONST TABLENAME = 'folders';
+class Folder extends Model
+{
+    const TABLENAME = 'folders';
 
     protected $children = array();
     protected $childrenInitialized = false;
 
-    public function __construct(){
+    public function __construct()
+    {
         $this->pushHook('after_open', 'initOldFields');
         $this->pushHook('before_save', 'testFolderName');
         $this->pushHook('before_save', 'detectChangeFolder');
         $this->pushHook('before_delete', 'deleteFolder');
 
-        if(defined('PRAGMA_SET_CREATED_UPDATED_BY')){
+        if (defined('PRAGMA_SET_CREATED_UPDATED_BY')) {
             $this->pushHook('before_save', PRAGMA_SET_CREATED_UPDATED_BY);
         }
 
         return parent::__construct(self::getTableName());
     }
 
-    public static function getTableName(){
-        defined('DB_PREFIX') || define('DB_PREFIX','pragma_');
-        return DB_PREFIX.self::TABLENAME;
+    public static function getTableName()
+    {
+        defined('DB_PREFIX') || define('DB_PREFIX', 'pragma_');
+        return DB_PREFIX . self::TABLENAME;
     }
 
-    public function save(){
-        if($this->is_new()){
+    public function save()
+    {
+        if ($this->is_new()) {
             $this->created_at = date('Y-m-d H:i:s');
-            if(!empty($this->parent_id)){
+            if (!empty($this->parent_id)) {
                 $this->updateRootId();
             }
-        }else{
+        } else {
             $this->updated_at = date('Y-m-d H:i:s');
         }
         return parent::save();
     }
 
-    public function getChildren(){
-        if(empty($this->children) && !$this->childrenInitialized){
+    public function getChildren()
+    {
+        if (empty($this->children) && !$this->childrenInitialized) {
             $this->initChildren();
         }
         return $this->children;
     }
 
-    public function initChildren(){
-        if( ! $this->new && ! is_null($this->id) && !empty($this->id)){
+    public function initChildren()
+    {
+        if (!$this->new && !is_null($this->id) && !empty($this->id)) {
             $this->childrenInitialized = true;
             $ref = empty($this->root_id) ? $this->id : $this->root_id; // Prbl qd on est sur un changement
             $children = self::forge()
@@ -58,16 +65,16 @@ class Folder extends Model{
                 ->get_objects();
 
             $family = array();
-            foreach($children as $c){
+            foreach ($children as $c) {
                 $family[$c->parent_id][] = $c;
             }
-            if( !empty($family)){
+            if (!empty($family)) {
                 $temp = array();
                 $temp[] = $this;
-                while(!empty($temp)){
+                while (!empty($temp)) {
                     $current = array_shift($temp);
-                    if(!empty($family[$current->id])){
-                        foreach($family[$current->id] as $fam){
+                    if (!empty($family[$current->id])) {
+                        foreach ($family[$current->id] as $fam) {
                             $current->children[$fam->id] = $fam;
                             $current->childrenInitialized = true;
                             array_unshift($temp, $fam);
@@ -80,17 +87,19 @@ class Folder extends Model{
         }
     }
 
-    public function initOldFields($force = false){
-        if(! $this->initialized || $force){
+    public function initOldFields($force = false)
+    {
+        if (!$this->initialized || $force) {
             $this->initial_values = $this->fields;
             $this->initialized = true;
         }
     }
 
-    public function testFolderName(){
+    public function testFolderName()
+    {
         // Empty name
         $this->name = trim($this->name);
-        if(empty($this->name)){
+        if (empty($this->name)) {
             throw new FolderException(FolderException::EMPTY_NAME_MSG, FolderException::EMPTY_NAME_ERROR);
         }
 
@@ -98,38 +107,39 @@ class Folder extends Model{
         $existing = self::forge()
             ->where('parent_id', '=', $this->parent_id)
             ->where('name', 'LIKE', $this->name);
-         if(!$this->is_new() && ! is_null($this->id) && !empty($this->id)){
+        if (!$this->is_new() && !is_null($this->id) && !empty($this->id)) {
             $existing = $existing->where('id', '!=', $this->id);
         }
         $existing = $existing->limit(1)
             ->get_arrays();
-        if(!empty($existing)){
+        if (!empty($existing)) {
             throw new FolderException(FolderException::DUPLICATE_NAME_MSG, FolderException::DUPLICATE_NAME_ERROR);
         }
     }
 
-    public function detectChangeFolder(){
-        if(!$this->is_new() && ! is_null($this->id) && !empty($this->id) && $this->initial_values['parent_id'] != $this->parent_id){
+    public function detectChangeFolder()
+    {
+        if (!$this->is_new() && !is_null($this->id) && !empty($this->id) && $this->initial_values['parent_id'] != $this->parent_id) {
             $newFold = $this->parent_id;
             $this->parent_id = $this->initial_values['parent_id'];
             $this->initChildren();
             $this->parent_id = $newFold;
 
-            if(!empty($this->parent_id)){
+            if (!empty($this->parent_id)) {
                 $father = self::find($this->parent_id);
-                $this->root_id = empty($father->root_id)? $father->id : $father->root_id;
-            }else{
+                $this->root_id = empty($father->root_id) ? $father->id : $father->root_id;
+            } else {
                 $desc = $this->describe();
                 $this->root_id = $desc['root_id']; // Set default value
             }
 
             $temp = $this->children;
-            while( ! empty($temp) ){
+            while (!empty($temp)) {
                 $sub = array_shift($temp);
                 $sub->root_id = empty($this->root_id) ? $this->id : $this->root_id;
                 $sub->save();
-                if(!empty($sub->children)){
-                    foreach($sub->children as $subsub){
+                if (!empty($sub->children)) {
+                    foreach ($sub->children as $subsub) {
                         array_unshift($temp, $subsub);
                     }
                 }
@@ -137,33 +147,120 @@ class Folder extends Model{
         }
     }
 
-    public function deleteFolder(){
-        if( ! $this->new && ! is_null($this->id) && !empty($this->id)){
+    public function deleteFolder()
+    {
+        if (!$this->new && !is_null($this->id) && !empty($this->id)) {
             // Delete documents
             $files = Document::forge()
                 ->where('folder_id', '=', $this->id)
                 ->get_objects();
-            foreach($files as $f){
+            foreach ($files as $f) {
                 $f->delete();
             }
 
             // Delete folders
             $childrens = $this->getChildren();
-            foreach($this->children as $c){
+            foreach ($this->children as $c) {
                 $c->delete();
             }
         }
     }
 
-    protected function updateRootId(){
-        if( empty($this->parent_id) ){
+    protected function updateRootId()
+    {
+        if (empty($this->parent_id)) {
             return false;
         }
         $parent = static::find($this->parent_id);
-        if( empty($parent) ){
+        if (empty($parent)) {
             return false;
         }
 
         $this->root_id = empty($parent->root_id) ? $parent->id : $parent->root_id;
+    }
+
+    /**
+     * Download direct files in this folder (zip)
+     */
+    public function downloadfiles($attachment = true)
+    {
+        $zipPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . uniqid('', true) . '.zip';
+        $zip = new \ZipArchive();
+        $zip->open($zipPath, \ZipArchive::CREATE);
+        $files = Document::forge()
+            ->where('folder_id', '=', $this->id)
+            ->get_objects();
+        foreach ($files as $f) {
+            if (file_exists($f->get_full_path())) {
+                $zip->addFile($f->get_full_path(), $f->name);
+            }
+        }
+        $nbZip = $zip->count();
+        $zip->close();
+
+        ob_clean();
+        error_reporting(0);
+
+        if (file_exists($zipPath) && $nbZip) {
+            ini_set('memory_limit', '512M');
+            header('Content-Type: application/zip');
+            if ($attachment) {
+                @ini_set('zlib.output_compression', 'Off');
+
+                // new download function works with IE6+SSL(http://fr.php.net/manual/fr/function.header.php#65404)
+                $zipPath = rawurldecode($zipPath);
+                $size = filesize($zipPath);
+
+                header('Content-Disposition: attachment; filename="' . $this->name . '.zip"');
+                header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+                header('Accept-Ranges: bytes');
+                header('Cache-control: private');
+                header('Pragma: private');
+
+                @ob_end_clean();
+                //while (ob_get_contents()) @ob_end_clean();
+                //@set_time_limit(3600);
+
+                ob_end_flush();
+
+                /////  multipart-download and resume-download
+                if (isset($_SERVER['HTTP_RANGE'])) {
+
+                    list($a, $range) = explode("=", $_SERVER['HTTP_RANGE']);
+                    str_replace($range, "-", $range);
+                    $size2 = $size - 1;
+                    $new_length = $size - $range;
+                    header("HTTP/1.1 206 Partial Content");
+                    header("Content-Length: $new_length");
+                    header("Content-Range: bytes $range$size2/$size");
+                } else {
+                    $size2 = $size - 1;
+                    header("Content-Length: " . $size);
+                }
+
+                @ob_flush();
+                @flush();
+                @readfile($zipPath);
+
+                if (isset($new_length)) {
+                    $size = $new_length;
+                }
+            } else {
+                header("Content-disposition: inline; filename={$this->name}.zip");
+                header("Content-Length: " . filesize($zipPath));
+                header("Pragma: no-cache");
+                header("Cache-Control: must-revalidate, post-check=0, pre-check=0, public");
+                header("Expires: 0");
+
+                @readfile($zipPath);
+            }
+            unlink($zipPath);
+            die();
+        } else {
+            if (file_exists($zipPath)) {
+                unlink($zipPath);
+            }
+            return false;
+        }
     }
 }
