@@ -5,6 +5,7 @@ namespace Pragma\Docs\Models;
 use Pragma\ORM\Model;
 use Pragma\Docs\Exceptions\DocumentException;
 use Pragma\Docs\Helpers\FileDownload;
+use Pragma\Docs\Helpers\S3;
 
 class Document extends Model
 {
@@ -71,14 +72,26 @@ class Document extends Model
         $filepath = is_null($fullpath) ? $this->get_full_path() : $fullpath;
         $path = "";
         $uid = "";
-        if (file_exists($filepath) && !empty($this->path)) {
-            $context = date('Y/m');
-            $uid = $this->is_public ? uniqid('', true) : uniqid();
-            $finalfilename = $uid . '.' . $this->extension;
-            $path = $context . DIRECTORY_SEPARATOR . $finalfilename;
-            $realpath = $this->build_path($context) . DIRECTORY_SEPARATOR . $finalfilename;
-            copy($filepath, $realpath);
+
+        if(S3::isConfigured()){
+            $uid = uniqid('', true);
+            
+            $temp_file = tempnam(sys_get_temp_dir(), 'clone') . '.' . $this->extension;
+		    file_put_contents($temp_file, file_get_contents($this->get_full_path()));
+
+            $storage = new S3();
+            $storage->upload($uid, $temp_file);
+        } else {
+            if (file_exists($filepath) && !empty($this->path)) {
+                $context = date('Y/m');
+                $uid = $this->is_public ? uniqid('', true) : uniqid();
+                $finalfilename = $uid . '.' . $this->extension;
+                $path = $context . DIRECTORY_SEPARATOR . $finalfilename;
+                $realpath = $this->build_path($context) . DIRECTORY_SEPARATOR . $finalfilename;
+                copy($filepath, $realpath);
+            }
         }
+
         return [$path, $uid];
     }
 
@@ -108,34 +121,45 @@ class Document extends Model
             if (empty($extension)) {
                 $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
             }
-            $context = date('Y/m');
-            $this->uid = $this->is_public ? uniqid('', true) : uniqid();
-            if (!empty($extension)) {
-                $finalfilename = $this->uid . '.' . $extension;
-            } else {
-                $finalfilename = $this->uid;
-            }
-            $path = $context . DIRECTORY_SEPARATOR . $finalfilename;
-            $realpath = $this->build_path($context) . DIRECTORY_SEPARATOR . $finalfilename;
 
-            if (is_uploaded_file($tmp_name)) {
-                if (!move_uploaded_file($tmp_name, $realpath)) {
-                    throw new DocumentException(sprintf(DocumentException::CANT_MOVE_MSG, (string)$tmp_name));
-                }
+            if(S3::isConfigured()){
+                $this->uid = uniqid('', true);
+                $storage = new S3();
+                $storage->upload($this->uid, $tmp_name);
             } else {
-                if (!$copy && !rename($tmp_name, $realpath)) {
-                    throw new DocumentException(sprintf(DocumentException::CANT_MOVE_MSG, (string)$tmp_name));
-                } else if ($copy && !copy($tmp_name, $realpath)) {
-                    throw new DocumentException(sprintf(DocumentException::CANT_COPY_MSG, (string)$tmp_name));
+                $context = date('Y/m');
+                $this->uid = $this->is_public ? uniqid('', true) : uniqid();
+                
+                if (!empty($extension)) {
+                    $finalfilename = $this->uid . '.' . $extension;
+                } else {
+                    $finalfilename = $this->uid;
+                }
+
+                $path = $context . DIRECTORY_SEPARATOR . $finalfilename;
+                $realpath = $this->build_path($context) . DIRECTORY_SEPARATOR . $finalfilename;
+                $this->path = $path;
+
+                if (is_uploaded_file($tmp_name)) {
+                    if (!move_uploaded_file($tmp_name, $realpath)) {
+                        throw new DocumentException(sprintf(DocumentException::CANT_MOVE_MSG, (string)$tmp_name));
+                    }
+                } else {
+                    if (!$copy && !rename($tmp_name, $realpath)) {
+                        throw new DocumentException(sprintf(DocumentException::CANT_MOVE_MSG, (string)$tmp_name));
+                    } else if ($copy && !copy($tmp_name, $realpath)) {
+                        throw new DocumentException(sprintf(DocumentException::CANT_COPY_MSG, (string)$tmp_name));
+                    }
                 }
             }
 
             $this->name = $file["name"];
             $this->size = $file["size"];
-            $this->path = $path;
             $this->extension = $extension;
+
             return true;
         } catch (\Exception $e) {
+            error_log($e->getMessage());
             return false;
         }
     }
@@ -163,14 +187,24 @@ class Document extends Model
 
     public function get_full_path()
     {
-        return DOC_STORE . $this->upload_path . ($this->is_public ? (DIRECTORY_SEPARATOR . 'public') : '') . DIRECTORY_SEPARATOR . $this->path;
+        if(S3::isConfigured()){
+            $storage = new S3();
+            return $storage->getPresignedUrl($this->uid);
+        } else {
+            return DOC_STORE . $this->upload_path . ($this->is_public ? (DIRECTORY_SEPARATOR . 'public') : '') . DIRECTORY_SEPARATOR . $this->path;
+        }
     }
 
     protected function delete_physical_file($fullpath = null)
     {
-        $filepath = is_null($fullpath) ? $this->get_full_path() : $fullpath;
-        if (file_exists($filepath) && !empty($this->path)) {
-            unlink($filepath);
+        if(S3::isConfigured()){
+            $storage = new S3();
+            $storage->delete($this->uid);
+        } else {
+            $filepath = is_null($fullpath) ? $this->get_full_path() : $fullpath;
+            if (file_exists($filepath) && !empty($this->path)) {
+                unlink($filepath);
+            }
         }
     }
 
@@ -179,13 +213,19 @@ class Document extends Model
         ob_clean();
         error_reporting(0);
 
-        $filepath = $this->get_full_path();
-
-        if (file_exists($filepath) && !empty($this->path)) {
-            FileDownload::download($filepath, $this->name, $this->extension, $attachment);
+        if(S3::isConfigured()){
+            $storage = new S3();
+            $storage->download($this, $attachment);
             die();
         } else {
-            return false;
+            $filepath = $this->get_full_path();
+
+            if (file_exists($filepath) && !empty($this->path)) {
+                FileDownload::download($filepath, $this->name, $this->extension, $attachment);
+                die();
+            } else {
+                return false;
+            }
         }
     }
 
@@ -205,11 +245,27 @@ class Document extends Model
     {
         ini_set('max_execution_time', 0);
         $content = '';
-        if (file_exists($this->get_full_path()) && is_file($this->get_full_path())) {
-            $pathexec = str_replace(" ", "\ ", $this->get_full_path());
+        $path = '';
+
+        if(S3::isConfigured()){
+            $path = tempnam(sys_get_temp_dir(), 'extracted_') . '.' . $this->extension;
+		    file_put_contents($path, file_get_contents($this->get_full_path()));
+        } else {
+            if (file_exists($this->get_full_path()) && is_file($this->get_full_path())) {
+                $path = $this->get_full_path();
+            }
+        }
+
+        if(!empty($path)){
+            $pathexec = str_replace(" ", "\ ", $path);
             $extrapath = defined("EXTRA_PATH") ? 'PATH=$PATH:' . EXTRA_PATH : '';
             $content = shell_exec(escapeshellcmd($extrapath . ' textract ' . escapeshellarg($pathexec) . ' --preserveLineBreaks ' . ($preserveLinesBreaks ? 'true' : 'false')));
+
+            if(S3::isConfigured()){
+                unlink($path);
+            }
         }
+        
         return $content;
     }
 
@@ -295,5 +351,17 @@ class Document extends Model
             $this->path = $path;
             $this->uid = $uid;
         }
+    }
+
+    public function as_array()
+    {
+        $data = parent::as_array();
+       
+        if($this->is_public){
+            $storage = new S3();
+            $data['path'] = $storage->getPresignedUrl($this->uid);
+        }
+
+        return $data;
     }
 }
