@@ -356,8 +356,8 @@ class Document extends Model
     public function as_array()
     {
         $data = parent::as_array();
-       
-        if($this->is_public){
+        
+        if(S3::isConfigured() && $this->is_public){
             $storage = new S3();
             $data['path'] = $storage->getPresignedUrl($this->uid);
         }
