@@ -259,7 +259,7 @@ class Document extends Model
         if(!empty($path)){
             $pathexec = str_replace(" ", "\ ", $path);
             $extrapath = defined("EXTRA_PATH") ? 'PATH=$PATH:' . EXTRA_PATH : '';
-            $content = shell_exec(escapeshellcmd($extrapath . ' textract ' . escapeshellarg($pathexec) . ' --preserveLineBreaks ' . ($preserveLinesBreaks ? 'true' : 'false')));
+            $content = shell_exec(escapeshellcmd($extrapath . ' textract ' . escapeshellarg($pathexec)));
 
             if(S3::isConfigured()){
                 unlink($path);
