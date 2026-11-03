@@ -247,7 +247,7 @@ class Document extends Model
         $content = '';
         $path = '';
 
-        if(S3::isConfigured()){
+        if(S3::isConfigured() && file_exists($this->get_full_path()) && is_file($this->get_full_path())){
             $path = tempnam(sys_get_temp_dir(), 'extracted_') . '.' . $this->extension;
 		    file_put_contents($path, file_get_contents($this->get_full_path()));
         } else {
